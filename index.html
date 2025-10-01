@@ -45,9 +45,13 @@
       }
       const seed = await hashToSeed(input);
       fakerModule.seed(seed);
+
+      const firstName = fakerModule.person.firstName();
+      const lastName  = fakerModule.person.lastName();
+      
       return {
-        firstName: fakerModule.person.firstName(),
-        lastName: fakerModule.person.lastName(),
+        firstName,
+        lastName,
         email: `${firstName}.${lastName}@sleeptracker.com`.toLowerCase()
 
       };
