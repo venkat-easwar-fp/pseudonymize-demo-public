@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pseudonymize via ESM</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input { padding: 6px; width: 300px; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 6px; }
+    .warn { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Pseudonymize Name Demo (ESM import)</h1>
+  <label for="inputText">Enter text (e.g., email):</label><br>
+  <input id="inputText" type="text" placeholder="alice@example.com" />
+  <button id="generateBtn">Generate</button>
+  <p id="warn" class="warn"></p>
+  <h2>Result</h2>
+  <pre id="output"></pre>
+
+  <script type="module">
+    let fakerModule = null;
+
+    async function loadFaker() {
+      try {
+        const mod = await import("https://esm.sh/@faker-js/faker");
+        fakerModule = mod.faker ?? mod;  // sometimes default export
+      } catch (err) {
+        document.getElementById("warn").textContent = 
+          "⚠️ Failed to import faker from esm.sh: " + err.message;
+        console.error(err);
+      }
+    }
+
+    async function hashToSeed(input) {
+      const buffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+      const hex = Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+      return parseInt(hex.substring(0, 8), 16);
+    }
+
+    async function pseudonymizeName(input) {
+      if (!fakerModule) {
+        throw new Error("faker module not loaded");
+      }
+      const seed = await hashToSeed(input);
+      fakerModule.seed(seed);
+      return {
+        firstName: fakerModule.person.firstName(),
+        lastName: fakerModule.person.lastName(),
+        email: `${firstName}.${lastName}@sleeptracker.com`.toLowerCase()
+
+      };
+    }
+
+    async function handleGenerate() {
+      const val = document.getElementById("inputText").value.trim();
+      const out = document.getElementById("output");
+      if (!val) {
+        out.textContent = "⚠️ Please enter a value.";
+        return;
+      }
+      try {
+        const pn = await pseudonymizeName(val);
+        out.textContent = JSON.stringify(pn, null, 2);
+        console.log("Input:", val, "→", pn);
+      } catch (e) {
+        out.textContent = "Error: " + e.message;
+        console.error(e);
+      }
+    }
+
+    document.getElementById("generateBtn").addEventListener("click", handleGenerate);
+
+    // Load faker then do default
+    loadFaker().then(() => {
+      document.getElementById("inputText").value = "alice@example.com";
+      handleGenerate();
+    });
+  </script>
+</body>
+</html>
