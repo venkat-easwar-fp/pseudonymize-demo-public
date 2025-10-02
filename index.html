@@ -20,41 +20,31 @@
   <pre id="output"></pre>
 
   <script type="module">
-
     async function anonymizeEmail(email) {
-
+      console.log("Debug:anonymizeValue", email);
       // Create a TextEncoder to turn the email string into raw bytes (UTF-8 encoded)
       const encoder = new TextEncoder();
-      
       // Encode the email string into a Uint8Array of bytes
       const data = encoder.encode(email);
-      
       // Use the browser's Web Crypto API to compute a SHA-256 hash of the bytes
       // crypto.subtle.digest returns a Promise that resolves to an ArrayBuffer
       const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      
       // Convert the ArrayBuffer into an array of 8-bit unsigned integers
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      
       // Convert bytes to hex (always alphanumeric 0–9a–f)
       const hex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-
       // Return first 5 hex characters as anonymized code
       return hex.substring(0, 5);
     }
 
-    async function hashToSeed(input) {
-      const buffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
-      const hex = Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("");
-      return parseInt(hex.substring(0, 8), 16);
-    }
 
     async function pseudonymizeName(input) {
       const anonymousCode  = await anonymizeEmail(input);
       
       return {
+        original: input,
         anonymousCode,
-        email: `${anonymousCode}@sleeptracker.com`.toLowerCase()
+        anonymousemail: `${anonymousCode}@sleeptracker.com`.toLowerCase()
       };
     }
 
