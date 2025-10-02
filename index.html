@@ -33,6 +33,15 @@
       }
     }
 
+    async function anonymizeEmail(email) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(email);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const base64 = btoa(String.fromCharCode(...hashArray));
+      return base64.substring(0, 5); // 5-character anonymized code
+    }
+
     async function hashToSeed(input) {
       const buffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
       const hex = Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("");
@@ -48,11 +57,14 @@
 
       const firstName = fakerModule.person.firstName();
       const lastName  = fakerModule.person.lastName();
+      // Add numeric anonymization
+      const anonCode  = await anonymizeEmail(input);
       
       return {
         firstName,
         lastName,
-        email: `${firstName}.${lastName}@sleeptracker.com`.toLowerCase()
+        email: `${firstName}.${lastName}@sleeptracker.com`.toLowerCase(),
+        anonCode
 
       };
     }
