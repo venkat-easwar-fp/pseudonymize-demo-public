@@ -34,12 +34,29 @@
     }
 
     async function anonymizeEmail(email) {
+      // "crypto works in Node because Node has the crypto module built-in.
+      // But in the browser, there is no require("crypto") or import crypto 
+      // from "crypto" — those throw errors. Instead, you need to use the 
+      // Web Crypto API (window.crypto.subtle) which is natively supported in browsers.
+
+      // Create a TextEncoder to turn the email string into raw bytes (UTF-8 encoded)
       const encoder = new TextEncoder();
+      
+      // Encode the email string into a Uint8Array of bytes
       const data = encoder.encode(email);
+      
+      // Use the browser's Web Crypto API to compute a SHA-256 hash of the bytes
+      // crypto.subtle.digest returns a Promise that resolves to an ArrayBuffer
       const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      
+      // Convert the ArrayBuffer into an array of 8-bit unsigned integers
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const base64 = btoa(String.fromCharCode(...hashArray));
-      return base64.substring(0, 5); // 5-character anonymized code
+      
+      // Convert bytes to hex (always alphanumeric 0–9a–f)
+      const hex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+      // Return first 5 hex characters as anonymized code
+      return hex.substring(0, 5);
     }
 
     async function hashToSeed(input) {
@@ -58,13 +75,14 @@
       const firstName = fakerModule.person.firstName();
       const lastName  = fakerModule.person.lastName();
       // Add numeric anonymization
-      const anonCode  = await anonymizeEmail(input);
+      const anonymousCode  = await anonymizeEmail(input);
       
       return {
-        firstName,
-        lastName,
-        email: `${firstName}.${lastName}@sleeptracker.com`.toLowerCase(),
-        anonCode
+        //firstName,
+        //lastName,
+        //email: `${firstName}.${lastName}@sleeptracker.com`.toLowerCase(),
+        anonymousCode,
+        email: `${anonymousCode}@sleeptracker.com`.toLowerCase(),
 
       };
     }
