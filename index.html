@@ -50,8 +50,13 @@
     }
 
     async function handleGenerate() {
-      const val = document.getElementById("inputText").value.trim();
+      const inputEl = document.getElementById("inputText").value.trim();
       const out = document.getElementById("output");
+
+      console.log("Raw value:", JSON.stringify(inputEl.value)); // see exactly what's in the box
+      const val = inputEl.value.trim();
+      console.log("Trimmed value:", JSON.stringify(val));
+      
       if (!val) {
         out.textContent = "⚠️ Please enter a value.";
         return;
